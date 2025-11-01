@@ -1,8 +1,6 @@
 import React from "react";
-import { Badge } from "@/components/ui/badge";
-import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
-import { timeblocksTable } from "@/db/schema";
-import { STUDENTS } from "@/components/calendar/placeholder-data";
+import {Badge} from "@/components/ui/badge";
+import {Sheet, SheetContent, SheetTitle} from "@/components/ui/sheet";
 import {
   IconCalendar,
   IconCalendarEvent,
@@ -12,14 +10,15 @@ import {
   IconPhone,
   IconX,
 } from "@tabler/icons-react";
-import { Separator } from "../ui/separator";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Button } from "../ui/button";
+import {Separator} from "../ui/separator";
+import {Avatar, AvatarFallback, AvatarImage} from "../ui/avatar";
+import {Button} from "../ui/button";
+import {SessionData, StudentInfo} from "@/components/calendar/types";
 
 type EventSheetProps = {
   isEventSheetOpen: boolean;
   setIsEventSheetOpen: (open: boolean) => void;
-  selectedSession: typeof timeblocksTable.$inferSelect | null;
+  selectedSession: SessionData & { studentInfo: StudentInfo | null } | null;
 };
 
 const getStatusColor = (status: string) => {
@@ -39,10 +38,6 @@ const getStatusColor = (status: string) => {
   }
 };
 
-const getStudentInfo = (studentId: number) => {
-  return STUDENTS.find((student) => student.id === studentId);
-};
-
 const formatTime = (date: Date) => {
   return date.toLocaleTimeString("default", {
     hour: "numeric",
@@ -60,14 +55,14 @@ const formatDate = (date: Date) => {
   });
 };
 
-export const EventSheet = (props: EventSheetProps) => {
-  const { selectedSession: event } = props;
+export const EventSheet = ({isEventSheetOpen, setIsEventSheetOpen, selectedSession: event}: EventSheetProps) => {
+  const student = event?.studentInfo;
 
   if (!event) {
     return (
       <Sheet
-        open={props.isEventSheetOpen}
-        onOpenChange={props.setIsEventSheetOpen}
+        open={isEventSheetOpen}
+        onOpenChange={setIsEventSheetOpen}
       >
         <SheetContent className="w-[400px] sm:w-[540px] p-5">
           <SheetTitle>Event Details</SheetTitle>
@@ -79,30 +74,27 @@ export const EventSheet = (props: EventSheetProps) => {
     );
   }
 
-  const student = getStudentInfo(event.studentId);
-  if (!student) return null;
+  const startTime = new Date(event.startTime);
+  const endTime = new Date(startTime.getTime() + event.duration * 60000);
 
   return (
     <Sheet
-      open={props.isEventSheetOpen}
-      onOpenChange={props.setIsEventSheetOpen}
+      open={isEventSheetOpen}
+      onOpenChange={setIsEventSheetOpen}
     >
       <SheetContent className="w-[400px] sm:w-[540px] p-0">
-        {props.selectedSession && (
+        {event && (
           <div className="flex flex-col h-full">
             <div className="p-6 pb-4 flex justify-between items-center">
               <SheetTitle className="text-2xl font-bold">
-                {event.startTime.toLocaleString("sl", {
-                  month: "long",
-                  day: "numeric",
-                })}
+                {student?.name || "Unknown student"} - {event.sessionType}
               </SheetTitle>
               <Badge className={getStatusColor(event.status)}>
                 {event.status}
               </Badge>
             </div>
 
-            <Separator />
+            <Separator/>
 
             {/* Content Section */}
             <div className="flex-1 p-6 space-y-6 overflow-y-auto">
@@ -118,7 +110,7 @@ export const EventSheet = (props: EventSheetProps) => {
                   </p>
                   <div className="flex items-center gap-4 text-sm">
                     <div className="flex items-center gap-2">
-                      <IconClock className="h-4 w-4 text-gray-500" />
+                      <IconClock className="h-4 w-4 text-gray-500"/>
                       <span className="text-gray-600">
                         {event.duration} min
                       </span>
@@ -135,27 +127,21 @@ export const EventSheet = (props: EventSheetProps) => {
                 <div className="bg-gray-50 rounded-lg p-4">
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-blue-100 rounded-lg">
-                      <IconCalendar className="h-4 w-4 text-blue-600" />
+                      <IconCalendar className="h-4 w-4 text-blue-600"/>
                     </div>
                     <div>
                       <p className="text-sm font-medium text-gray-900">
-                        {formatDate(new Date(props.selectedSession.startTime))}
+                        {formatDate(new Date(event.startTime))}
                       </p>
                       <p className="text-xs text-gray-600">
-                        {formatTime(new Date(props.selectedSession.startTime))}{" "}
-                        -{" "}
-                        {formatTime(
-                          new Date(
-                            event.startTime.getTime() + event.duration * 60000
-                          )
-                        )}
+                        {formatTime(startTime)} - {formatTime(endTime)}
                       </p>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Tutor Information */}
+              {/* Student Information */}
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
                   Your Student
@@ -163,7 +149,7 @@ export const EventSheet = (props: EventSheetProps) => {
                 <div className="bg-gray-50 rounded-lg p-4 space-y-3">
                   <div className="flex items-center gap-3">
                     <Avatar className="h-10 w-10">
-                      <AvatarImage src={student?.avatar} alt={student?.name} />
+                      <AvatarImage src={student?.image} alt={student?.name || "Student"}/>
                       <AvatarFallback className="text-sm">
                         {student?.name?.split(" ")[0][0]}
                       </AvatarFallback>
@@ -176,7 +162,7 @@ export const EventSheet = (props: EventSheetProps) => {
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-green-100 rounded-lg">
-                      <IconMail className="h-4 w-4 text-green-600" />
+                      <IconMail className="h-4 w-4 text-green-600"/>
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-medium text-gray-900">Email</p>
@@ -185,11 +171,11 @@ export const EventSheet = (props: EventSheetProps) => {
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-blue-100 rounded-lg">
-                      <IconPhone className="h-4 w-4 text-blue-600" />
+                      <IconPhone className="h-4 w-4 text-blue-600"/>
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-medium text-gray-900">Phone</p>
-                      <p className="text-sm text-gray-600">{student?.phone}</p>
+                      <p className="text-sm text-foreground/40 italic">unknown</p>
                     </div>
                   </div>
                 </div>
@@ -203,14 +189,14 @@ export const EventSheet = (props: EventSheetProps) => {
                 <div className="bg-gray-50 rounded-lg p-4 space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-purple-100 rounded-lg">
-                      <IconMapPin className="h-4 w-4 text-purple-600" />
+                      <IconMapPin className="h-4 w-4 text-purple-600"/>
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-medium text-gray-900">
                         Location
                       </p>
                       <p className="text-sm text-gray-600">
-                        {props.selectedSession.location}
+                        {event.location}
                       </p>
                     </div>
                   </div>
@@ -218,20 +204,20 @@ export const EventSheet = (props: EventSheetProps) => {
               </div>
             </div>
 
-            <Separator />
+            <Separator/>
 
             {/* Action Buttons */}
             <div className="p-6">
               <div className="flex gap-3">
                 {event.status === "cancelled" ? (
                   <Button className="flex-1" size="sm">
-                    <IconCalendarEvent className="h-4 w-4 mr-2" />
+                    <IconCalendarEvent className="h-4 w-4 mr-2"/>
                     Make available Session
                   </Button>
                 ) : event.status === "booked" ? (
                   <>
                     <Button variant="destructive" size="sm" className="flex-1">
-                      <IconX className="h-4 w-4 mr-2" />
+                      <IconX className="h-4 w-4 mr-2"/>
                       Cancel
                     </Button>
                   </>

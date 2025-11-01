@@ -1,47 +1,201 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import { useState, useRef, useEffect, useCallback } from "react";
+import {useState, useRef, useEffect, useCallback} from "react";
+import {useRouter, useSearchParams} from "next/navigation";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import listPlugin from "@fullcalendar/list";
 import interactionPlugin from "@fullcalendar/interaction";
-import { TIMEBLOCKS } from "@/components/calendar/placeholder-data";
-import { EventClickArg } from "@/components/calendar/types";
-import { CalendarControls } from "@/components/calendar/calendar-controls";
-import { EventSheet } from "@/components/calendar/event-sheet";
+import {
+  EventClickArg,
+  SessionData,
+  StudentInfo,
+} from "@/components/calendar/types";
+import {CalendarControls} from "@/components/calendar/calendar-controls";
+import {EventSheet} from "@/components/calendar/event-sheet";
 import "@/components/calendar/calendar-styles.css";
-import { timeblocksTable } from "@/db/schema";
-import { getStatusColor } from "./calendar-functions";
+import {getStatusColor} from "./calendar-functions";
+import {getStudentInfo} from "@/actions/timeblocks";
 
-export default function Calendar() {
+export default function Calendar({data}: { data: SessionData[] }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Get initial values from URL params
+  const urlView = searchParams.get("view");
+  const initialView = urlView || "month";
+  const viewMap: Record<string, string> = {
+    month: "dayGridMonth",
+    week: "timeGridWeek",
+    day: "timeGridDay",
+    "2days": "timeGrid2Day",
+    "3days": "timeGrid3Day",
+    list: "listWeek",
+  };
+  const initialFullCalendarView = viewMap[initialView] || "dayGridMonth";
+
   const [selectedEvent, setSelectedEvent] = useState<
-    typeof timeblocksTable.$inferSelect | null
+    (SessionData & { studentInfo: StudentInfo | null }) | null
   >(null);
   const [isEventSheetOpen, setIsEventSheetOpen] = useState(false);
   const [isViewDropdownOpen, setIsViewDropdownOpen] = useState(false);
   const [calendarTitle, setCalendarTitle] = useState("Calendar");
-  const [currentView, setCurrentView] = useState("dayGridMonth");
+  const [currentView, setCurrentView] = useState(initialFullCalendarView);
   const [showWeekends, setShowWeekends] = useState(true);
+  const [studentsInfo, setStudentsInfo] = useState<
+    Record<string, StudentInfo | null>
+  >({});
   const calendarRef = useRef<FullCalendar>(null);
 
-  // Initialize calendar title
+  // Fetch student names for all unique studentIds
   useEffect(() => {
+    const fetchStudentsInfo = async () => {
+      const uniqueStudentIds = Array.from(
+        new Set(data.map((session) => session.studentId).filter(Boolean))
+      );
+
+      const nameMap: Record<string, StudentInfo | null> = {};
+
+      await Promise.all(
+        uniqueStudentIds.map(async (studentId) => {
+          try {
+            const result = await getStudentInfo(studentId);
+            if (result.status === 200 && result.user) {
+              nameMap[studentId] = result.user;
+            } else {
+              nameMap[studentId] = null;
+            }
+          } catch (error) {
+            console.error(
+              `Failed to fetch student info for ${studentId}:`,
+              error
+            );
+            nameMap[studentId] = null;
+          }
+        })
+      );
+
+      setStudentsInfo(nameMap);
+    };
+
+    if (data.length > 0) {
+      fetchStudentsInfo();
+    }
+  }, [data]);
+
+  const events = data.map((session) => {
+    const studentInfo = session.studentId
+      ? studentsInfo[session.studentId]
+      : null;
+
+    const studentName = studentInfo?.name || "Loading...";
+
+    return {
+      id: session.id.toString(),
+      title: `${studentName} - ${session.sessionType}`,
+      start: session.startTime,
+      end: new Date(
+        new Date(session.startTime).getTime() + session.duration * 60000
+      ),
+      extendedProps: {
+        status: session.status,
+        studentInfo: studentInfo,
+        studentId: session.studentId,
+        tutorId: session.tutorId,
+        location: session.location,
+        sessionType: session.sessionType,
+        duration: session.duration,
+      },
+    };
+  });
+
+  // Initialize calendar date and title from URL params
+  useEffect(() => {
+    const calendarApi = calendarRef.current?.getApi();
+    if (!calendarApi) return;
+
+    const monthParam = searchParams.get("month");
+    if (monthParam) {
+      // Try to parse the month name and navigate to that month
+      try {
+        // Create a date object for the first day of the month
+        const monthNames = [
+          "January", "February", "March", "April", "May", "June",
+          "July", "August", "September", "October", "November", "December",
+        ];
+        const monthIndex = monthNames.findIndex(
+          (m) => m.toLowerCase() === monthParam.toLowerCase()
+        );
+        if (monthIndex !== -1) {
+          const currentDate = new Date();
+          const targetDate = new Date(currentDate.getFullYear(), monthIndex, 1);
+          calendarApi.gotoDate(targetDate);
+        }
+      } catch (e) {
+        console.error("Error parsing month from URL:", e);
+      }
+    }
+
     const timer = setTimeout(() => {
       updateCalendarTitle();
     }, 100);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [searchParams]);
 
-  const changeView = useCallback((viewName: string) => {
-    const calendarApi = calendarRef.current?.getApi();
-    if (calendarApi) {
-      calendarApi.changeView(viewName);
-      setCurrentView(viewName);
-      updateCalendarTitle();
-    }
-  }, []);
+  // Update URL params when view or date changes
+  const updateUrlParams = useCallback(
+    (updates: { view?: string; month?: string; date?: string }) => {
+      const params = new URLSearchParams(searchParams.toString());
+
+      // Ensure tab is set to calendar if not already
+      if (!params.get("tab")) {
+        params.set("tab", "calendar");
+      }
+
+      if (updates.view) {
+        // Map FullCalendar view names to URL-friendly names
+        const viewNameMap: Record<string, string> = {
+          dayGridMonth: "month",
+          timeGridWeek: "week",
+          timeGridDay: "day",
+          timeGrid2Day: "2days",
+          timeGrid3Day: "3days",
+          listWeek: "list",
+        };
+        const urlViewName = viewNameMap[updates.view] || updates.view;
+        params.set("view", urlViewName);
+      }
+
+      if (updates.month) {
+        params.set("month", updates.month);
+      } else if (updates.date) {
+        // Extract month name from date
+        const date = new Date(updates.date);
+        const monthName = date.toLocaleDateString("en-US", {month: "long"});
+        if (currentView === "dayGridMonth") {
+          params.set("month", monthName);
+        }
+      }
+
+      router.push(`/timeblocks?${params.toString()}`, {scroll: false});
+    },
+    [searchParams, router, currentView]
+  );
+
+  const changeView = useCallback(
+    (viewName: string) => {
+      const calendarApi = calendarRef.current?.getApi();
+      if (calendarApi) {
+        calendarApi.changeView(viewName);
+        setCurrentView(viewName);
+        updateCalendarTitle();
+        updateUrlParams({view: viewName});
+      }
+    },
+    [updateUrlParams]
+  );
 
   const handleMoreEventsClick = useCallback(
     (date: Date) => {
@@ -113,37 +267,49 @@ export default function Calendar() {
   }, [handleMoreEventsClick]);
 
   const handleEventClick = (arg: EventClickArg) => {
-    // Convert FullCalendar event back to TutoringSession
-    const session: typeof timeblocksTable.$inferSelect = {
+    // Convert FullCalendar event back to SessionData with studentInfo
+    const session: SessionData & { studentInfo: StudentInfo | null } = {
       id: parseInt(arg.event.id),
       tutorId: arg.event.extendedProps.tutorId,
-      startTime: arg.event.start!,
+      startTime: arg.event.start!.toISOString(), // Convert Date to string
       duration: arg.event.extendedProps.duration,
       status: arg.event.extendedProps.status,
       sessionType: arg.event.extendedProps.sessionType,
       location: arg.event.extendedProps.location,
       studentId: arg.event.extendedProps.studentId,
+      studentInfo: arg.event.extendedProps.studentInfo,
     };
     setSelectedEvent(session);
     setIsEventSheetOpen(true);
   };
-
   const goToToday = () => {
     const calendarApi = calendarRef.current?.getApi();
-    calendarApi?.today();
-    updateCalendarTitle();
+    if (calendarApi) {
+      calendarApi.today();
+      updateCalendarTitle();
+      const currentDate = calendarApi.getDate();
+      updateUrlParams({date: currentDate.toISOString()});
+    }
   };
 
   const goToPrev = () => {
     const calendarApi = calendarRef.current?.getApi();
-    calendarApi?.prev();
-    updateCalendarTitle();
+    if (calendarApi) {
+      calendarApi.prev();
+      updateCalendarTitle();
+      const currentDate = calendarApi.getDate();
+      updateUrlParams({date: currentDate.toISOString()});
+    }
   };
 
   const goToNext = () => {
     const calendarApi = calendarRef.current?.getApi();
-    calendarApi?.next();
-    updateCalendarTitle();
+    if (calendarApi) {
+      calendarApi.next();
+      updateCalendarTitle();
+      const currentDate = calendarApi.getDate();
+      updateUrlParams({date: currentDate.toISOString()});
+    }
   };
 
   const updateCalendarTitle = () => {
@@ -181,55 +347,55 @@ export default function Calendar() {
             listPlugin,
             interactionPlugin,
           ]}
-          initialView="dayGridMonth"
+          initialView={initialFullCalendarView}
           headerToolbar={false}
           height="100%"
+          datesSet={(arg) => {
+            // Update URL when calendar date changes (navigation, view change, etc.)
+            const calendarApi = calendarRef.current?.getApi();
+            if (calendarApi) {
+              updateCalendarTitle();
+              const view = calendarApi.view;
+              if (view.type === "dayGridMonth") {
+                const monthName = arg.start.toLocaleDateString("en-US", {
+                  month: "long",
+                });
+                updateUrlParams({month: monthName});
+              }
+            }
+          }}
           views={{
             timeGridWeek: {
               type: "timeGrid",
-              duration: { weeks: 1 },
+              duration: {weeks: 1},
               buttonText: "Week",
               allDaySlot: false,
-              dayHeaderFormat: { weekday: "short" },
+              dayHeaderFormat: {weekday: "short"},
             },
             timeGrid2Day: {
               type: "timeGrid",
-              duration: { days: 2 },
+              duration: {days: 2},
               buttonText: "2 days",
               allDaySlot: false,
-              dayHeaderFormat: { weekday: "long", day: "numeric" },
+              dayHeaderFormat: {weekday: "long", day: "numeric"},
             },
             timeGrid3Day: {
               type: "timeGrid",
-              duration: { days: 3 },
+              duration: {days: 3},
               buttonText: "3 days",
               allDaySlot: false,
-              dayHeaderFormat: { weekday: "long", day: "numeric" },
+              dayHeaderFormat: {weekday: "long", day: "numeric"},
             },
             timeGridDay: {
               type: "timeGrid",
-              duration: { days: 1 },
+              duration: {days: 1},
               buttonText: "Day",
               allDaySlot: false,
-              dayHeaderFormat: { weekday: "long", day: "numeric" },
+              dayHeaderFormat: {weekday: "long", day: "numeric"},
             },
           }}
           allDaySlot={false}
-          events={TIMEBLOCKS.map((timeblock) => ({
-            id: timeblock.id.toString(),
-            title: timeblock.sessionType,
-            start: timeblock.startTime,
-            end: new Date(
-              timeblock.startTime.getTime() + timeblock.duration * 60000
-            ),
-            extendedProps: {
-              status: timeblock.status,
-              duration: timeblock.duration,
-              sessionType: timeblock.sessionType,
-              location: timeblock.location,
-              studentId: timeblock.studentId,
-            },
-          }))}
+          events={events}
           eventClick={handleEventClick}
           editable={true}
           selectable={false}
@@ -324,7 +490,7 @@ export default function Calendar() {
                     marginBottom: "0px",
                   }}
                 >
-                  {eventInfo.event.extendedProps?.status}
+                  {eventInfo.event.title}
                 </div>
                 <div
                   className="text-xs opacity-80 truncate"

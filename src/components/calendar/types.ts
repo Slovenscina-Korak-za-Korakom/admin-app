@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
 // Types
+
 export interface DateClickArg {
   dateStr: string;
   date: Date;
@@ -27,4 +29,21 @@ export interface EventResizeArg {
   startDelta: any;
   endDelta: any;
   revert: () => void;
+}
+
+export interface SessionData {
+  id: number,
+  startTime: Date,
+  duration: number,
+  status: string,
+  sessionType: string,
+  location: string,
+  studentId: string,
+  tutorId: number
+}
+
+export interface StudentInfo {
+  name: string | null;
+  email: string;
+  image: string;
 }
