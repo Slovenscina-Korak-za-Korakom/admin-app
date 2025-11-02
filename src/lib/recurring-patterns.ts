@@ -1,5 +1,5 @@
 /**
- * Utility functions for handling recurring patterns in timeblocks
+ * Utility functions for handling recurring patterns in my-schedule
  */
 
 export interface RecurringPattern {
@@ -21,7 +21,7 @@ export interface TimeblockData {
 }
 
 /**
- * Generate timeblocks based on a recurring pattern
+ * Generate my-schedule based on a recurring pattern
  */
 export function generateRecurringTimeblocks(
   baseTimeblock: TimeblockData,

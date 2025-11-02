@@ -76,6 +76,12 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  /* Sidebar Colorful Accents - Light Mode */
+  --sidebar-accent-active: oklch(0.92 0.05 280); /* Soft purple background */
+  --sidebar-accent-hover: oklch(0.95 0.03 280); /* Lighter purple hover */
+  --sidebar-indicator: oklch(0.55 0.22 280); /* Vibrant purple indicator */
+  --sidebar-icon-gradient: linear-gradient(135deg, oklch(0.65 0.2 280), oklch(0.6 0.18 340)); /* Purple to blue gradient */
+  --sidebar-icon-bg: oklch(0.94 0.06 280); /* Light purple icon background */
 
   /* Calendar Colors */
   --calendar-today-bg: #ebf5ff;
@@ -133,6 +139,12 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+  /* Sidebar Colorful Accents - Dark Mode */
+  --sidebar-accent-active: oklch(0.25 0.08 280); /* Deeper purple background */
+  --sidebar-accent-hover: oklch(0.30 0.06 280); /* Medium purple hover */
+  --sidebar-indicator: oklch(0.70 0.20 280); /* Bright purple indicator */
+  --sidebar-icon-gradient: linear-gradient(135deg, oklch(0.70 0.22 280), oklch(0.65 0.20 340)); /* Purple to blue gradient */
+  --sidebar-icon-bg: oklch(0.28 0.09 280); /* Purple icon background */
 
   /* Calendar Colors - Dark Mode */
   --calendar-today-bg: #1a2531;

@@ -9,9 +9,9 @@ import {
   IconClock,
   IconUsers,
 } from "@tabler/icons-react";
-import {TimeblockList} from "@/app/(protected)/timeblocks/_components/timeblock-list";
-import {BookingManagement} from "@/app/(protected)/timeblocks/_components/booking-management";
-import ScheduleBuilder from "@/app/(protected)/timeblocks/_components/schedule-builder";
+import {TimeblockList} from "@/app/(protected)/my-schedule/_components/timeblock-list";
+import {BookingManagement} from "@/app/(protected)/my-schedule/_components/booking-management";
+import ScheduleBuilder from "@/app/(protected)/my-schedule/_components/schedule-builder";
 import Calendar from "@/components/calendar/calendar";
 import {SessionData} from "@/components/calendar/types";
 
@@ -29,7 +29,7 @@ const TimeblockTabs = ({
   const handleTabChange = (value: string) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", value);
-    router.push(`/timeblocks?${params.toString()}`);
+    router.push(`/my-schedule?${params.toString()}`);
   };
 
   return (

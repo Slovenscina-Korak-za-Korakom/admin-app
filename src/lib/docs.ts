@@ -26,8 +26,8 @@ export const SIDEBAR_DATA = {
       icon: IconLanguage,
     },
     {
-      title: "Timeblocks",
-      url: "/timeblocks",
+      title: "My Schedule",
+      url: "/my-schedule",
       icon: IconClock,
     },
     {

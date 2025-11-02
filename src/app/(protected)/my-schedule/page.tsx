@@ -1,4 +1,4 @@
-import TimeblockTabs from "@/app/(protected)/timeblocks/_components/timeblock-tabs";
+import TimeblockTabs from "@/app/(protected)/my-schedule/_components/timeblock-tabs";
 import {auth} from "@clerk/nextjs/server";
 import {notFound} from "next/navigation";
 import {timeblocksTable, tutorsTable} from "@/db/schema";
