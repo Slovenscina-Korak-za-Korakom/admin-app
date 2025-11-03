@@ -1,13 +1,12 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import { getBookingById, getBookingByTheme } from "@/actions/language-club";
-import { useRouter } from "next/navigation";
-import { Input } from "@/components/ui/input";
-import { Loader2 } from "lucide-react";
-import { useSearchParams } from "next/navigation";
-import React, { useEffect, useState } from "react";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import {getBookingById, getBookingByTheme} from "@/actions/language-club";
+import {useRouter} from "next/navigation";
+import {Input} from "@/components/ui/input";
+import {Loader2} from "lucide-react";
+import {useSearchParams} from "next/navigation";
+import React, {useEffect, useState} from "react";
+import {toast} from "sonner";
+import {Button} from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -27,7 +26,7 @@ import {
   IconUsers,
   IconWorldPin,
 } from "@tabler/icons-react";
-import { toZonedTime } from "date-fns-tz";
+import {toZonedTime} from "date-fns-tz";
 import {
   Dialog,
   DialogContent,
@@ -122,7 +121,7 @@ const Bookings = () => {
           />
           <Button type="submit" variant="outline" disabled={loading}>
             <span className="flex items-center gap-2">
-              <IconSearch className="w-4 h-4" />
+              <IconSearch className="w-4 h-4"/>
               Search
             </span>
           </Button>
@@ -130,7 +129,7 @@ const Bookings = () => {
 
         {loading && (
           <div className="mt-4 text-gray-500 w-full flex justify-center items-center">
-            <Loader2 className="animate-spin" />
+            <Loader2 className="animate-spin"/>
           </div>
         )}
 
@@ -153,7 +152,7 @@ const Bookings = () => {
                   <div className="grid grid-cols-2 gap-2">
                     <div className="flex flex-col gap-2">
                       <p className="inline-flex items-center gap-2">
-                        <IconWorldPin className="w-6 h-6 text-green-700/80 dark:text-green-500/80" />
+                        <IconWorldPin className="w-6 h-6 text-green-700/80 dark:text-green-500/80"/>
                         <a
                           href={`https://www.google.com/maps/search/?api=1&query=${booking.location}`}
                           target="_blank"
@@ -163,28 +162,28 @@ const Bookings = () => {
                         </a>
                       </p>
                       <p className="inline-flex items-center gap-2">
-                        <IconClock className="w-6 h-6 text-red-700/80 dark:text-red-500/80" />
+                        <IconClock className="w-6 h-6 text-red-700/80 dark:text-red-500/80"/>
                         {booking.duration} min
                       </p>
                       <p className="inline-flex items-center gap-2">
-                        <IconUsers className="w-6 h-6 text-indigo-700/80 dark:text-indigo-400/80" />
+                        <IconUsers className="w-6 h-6 text-indigo-700/80 dark:text-indigo-400/80"/>
                         {booking.peopleBooked} / {booking.maxBooked} booked
                       </p>
                     </div>
                     <div className="flex flex-col gap-2">
                       <p className="inline-flex items-center gap-2">
-                        <IconLanguage className="w-6 h-6 text-blue-700/80 dark:text-blue-500/80" />
+                        <IconLanguage className="w-6 h-6 text-blue-700/80 dark:text-blue-500/80"/>
                         {booking.level} level
                       </p>
                       <p className="inline-flex items-center gap-2">
-                        <IconMoneybag className="w-6 h-6 text-yellow-600 dark:text-yellow-500/80" />
+                        <IconMoneybag className="w-6 h-6 text-yellow-600 dark:text-yellow-500/80"/>
                         {booking.price} EUR
                       </p>
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center justify-center gap-2 text-sm">
-                  <IconCalendar className="w-4 h-4" />
+                  <IconCalendar className="w-4 h-4"/>
                   <span>
                     {toZonedTime(
                       booking.date,
@@ -230,15 +229,15 @@ const Bookings = () => {
               >
                 <div className="flex flex-row items-center gap-4">
                   <p className="font-medium inline-flex items-center gap-1">
-                    <IconBrush className="w-4 h-4" />
+                    <IconBrush className="w-4 h-4"/>
                     {booking.theme}
                   </p>
                   <p className="text-sm text-muted-foreground inline-flex items-center gap-1">
-                    <IconUser className="w-4 h-4" />
+                    <IconUser className="w-4 h-4"/>
                     {booking.tutor}
                   </p>
                   <p className="text-sm text-muted-foreground inline-flex items-center gap-1">
-                    <IconCalendar className="w-4 h-4" />
+                    <IconCalendar className="w-4 h-4"/>
                     {toZonedTime(
                       new Date(booking.date),
                       "Europe/Ljubljana"
@@ -251,7 +250,7 @@ const Bookings = () => {
                     })}
                   </p>
                   <p className="text-sm text-muted-foreground inline-flex items-center gap-1">
-                    <IconMapPin className="w-4 h-4" />
+                    <IconMapPin className="w-4 h-4"/>
                     {booking.location}
                   </p>
                 </div>

@@ -2,8 +2,9 @@
 "use server";
 
 import db from "@/db";
-import {schedulesTable} from "@/db/schema";
+import {schedulesTable, timeblocksTable, tutorsTable} from "@/db/schema";
 import {auth, clerkClient} from "@clerk/nextjs/server";
+import {eq} from "drizzle-orm";
 
 export const createSchedule = async (data: any) => {
   const {userId} = await auth();
@@ -48,5 +49,33 @@ export const getStudentInfo = async (studentId: string) => {
     },
     status: 200
   }
+}
 
+export const getScheduleData = async () => {
+  const {userId} = await auth();
+  if (!userId) {
+    return {message: "Unauthorized", status: 401};
+  }
+
+  try {
+    const data = await db
+      .select({
+        id: timeblocksTable.id,
+        tutorId: timeblocksTable.tutorId,
+        startTime: timeblocksTable.startTime,
+        duration: timeblocksTable.duration,
+        status: timeblocksTable.status,
+        sessionType: timeblocksTable.sessionType,
+        location: timeblocksTable.location,
+        studentId: timeblocksTable.studentId,
+      })
+      .from(timeblocksTable)
+      .innerJoin(tutorsTable, eq(tutorsTable.id, timeblocksTable.tutorId))
+      .where(eq(tutorsTable.clerkId, userId));
+
+    return {data: data, status: 200};
+  } catch (error) {
+    console.log(error);
+    return {message: "Error fetching schedule data", status: 500};
+  }
 }

@@ -1,8 +1,9 @@
 import {redirect} from "next/navigation";
 import {currentUser} from "@clerk/nextjs/server";
 import {Button} from "@/components/ui/button";
-import {IconDashboard, IconExternalLink} from "@tabler/icons-react";
+import {IconDashboard, IconExternalLink, IconLogout} from "@tabler/icons-react";
 import Link from "next/link";
+import {SignOutButton} from "@clerk/nextjs";
 
 const Page = async () => {
 
@@ -23,14 +24,24 @@ const Page = async () => {
           <>
             <h1 className="text-red-400 font-bold text-3xl">You do not have permission to be here!</h1>
             <p className="text-foreground/50 italic">No access on {user?.emailAddresses[0].emailAddress}</p>
-            <Button asChild>
-              <a href="https://www.slovenscinakzk.com" target="_self" rel="noopener noreferrer">
+            <div className={"flex flex-row items-center gap-2"}>
+              <Button asChild>
+                <a href="https://www.slovenscinakzk.com" target="_self" rel="noopener noreferrer">
                 <span className="inline-flex items-center gap-2">
                   <IconExternalLink/>
                   Go to slovenscinakzk.com
                 </span>
-              </a>
-            </Button>
+                </a>
+              </Button>
+              <Button asChild>
+                <SignOutButton>
+                <span className="inline-flex items-center gap-2">
+                  <IconLogout/>
+                Sign Out
+                </span>
+                </SignOutButton>
+              </Button>
+            </div>
           </>
         ) : (
           <div className="flex flex-col gap-5 items-center justify-center">

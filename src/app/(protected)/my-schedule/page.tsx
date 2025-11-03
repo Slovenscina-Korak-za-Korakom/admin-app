@@ -1,12 +1,10 @@
 import TimeblockTabs from "@/app/(protected)/my-schedule/_components/timeblock-tabs";
-import {auth} from "@clerk/nextjs/server";
-import {notFound} from "next/navigation";
-import {timeblocksTable, tutorsTable} from "@/db/schema";
-import db from "@/db";
-import {eq} from "drizzle-orm";
-import {toast} from "sonner";
-import {SessionData} from "@/components/calendar/types";
-import {checkTutorActivation} from "@/actions/admin-actions";
+import { auth } from "@clerk/nextjs/server";
+import { notFound } from "next/navigation";
+import { SessionData } from "@/components/calendar/types";
+import { checkTutorActivation } from "@/actions/admin-actions";
+import { ActivationWrapper } from "@/app/(protected)/my-schedule/_components/activation-wrapper";
+import { getScheduleData } from "@/actions/timeblocks";
 
 type SearchParams = {
   tab?: string;
@@ -15,51 +13,24 @@ type SearchParams = {
 };
 
 export default async function TimeblocksPage({
-                                               searchParams,
-                                             }: {
-  searchParams: SearchParams;
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
 }) {
-  const {userId} = await auth();
+  const { userId } = await auth();
 
   if (!userId) {
     throw notFound();
   }
 
-  const isActivated = await checkTutorActivation(userId);
+  const params = await searchParams;
+  const isActivated = (await checkTutorActivation(userId)) as boolean;
 
-  let data: SessionData[] = [];
-
-  try {
-    data = await db
-      .select({
-        id: timeblocksTable.id,
-        tutorId: timeblocksTable.tutorId,
-        startTime: timeblocksTable.startTime,
-        duration: timeblocksTable.duration,
-        status: timeblocksTable.status,
-        sessionType: timeblocksTable.sessionType,
-        location: timeblocksTable.location,
-        studentId: timeblocksTable.studentId,
-      })
-      .from(timeblocksTable)
-      .innerJoin(tutorsTable, eq(tutorsTable.id, timeblocksTable.tutorId))
-      .where(eq(tutorsTable.clerkId, userId));
-  } catch (error) {
-    console.log(error);
-    toast.error("Could not load booked sessions");
-  }
+  const { data } = (await getScheduleData()) as { data: SessionData[] };
 
   return (
     <div className="flex flex-col flex-1 min-h-0 p-5 space-y-6 w-full h-full">
-      {/*{!isActivated && (*/}
-      {/*  <div className={"absolute bg-foreground/50 p-5 w-full top-0 left-0 h-full"}>*/}
-      {/*    <h1>Activate your account!</h1>*/}
-      {/*    <Button>*/}
-      {/*      ACTIVATE*/}
-      {/*    </Button>*/}
-
-      {/*  </div>*/}
-      {/*)}*/}
+      <ActivationWrapper isActivated={isActivated} />
       <div className="flex items-center justify-between flex-shrink-0">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
@@ -70,7 +41,7 @@ export default async function TimeblocksPage({
           </p>
         </div>
       </div>
-      <TimeblockTabs data={data} initialTab={searchParams.tab}/>
+      <TimeblockTabs data={data} initialTab={params.tab} />
     </div>
   );
 }

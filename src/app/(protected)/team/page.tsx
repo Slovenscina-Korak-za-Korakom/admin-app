@@ -1,0 +1,46 @@
+import {getAllTutorHoursByType, isAdmin} from "@/actions/admin-actions";
+import {TutorHoursOverview} from "@/app/(protected)/team/_components/tutor-hours-overview";
+import {notFound} from "next/navigation";
+
+export default async function TeamPage() {
+  const isUserAdmin = await isAdmin();
+
+  console.log("User is admin: ", isUserAdmin ? "Yes" : "No");
+  if (!isUserAdmin) {
+    throw notFound();
+  }
+  const result = await getAllTutorHoursByType();
+
+  if (result.status !== 200) {
+    return (
+      <div className="flex flex-col gap-6 p-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Team Hours</h1>
+          <p className="text-muted-foreground mt-1">
+            View tutor hours broken down by session type
+          </p>
+        </div>
+        <div className="text-destructive">
+          {result.message || "Failed to load tutor hours"}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-6 p-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Team Hours</h1>
+          <p className="text-muted-foreground mt-1">
+            View tutor hours broken down by session type
+          </p>
+        </div>
+      </div>
+
+      {/* Tutor Hours Overview */}
+      <TutorHoursOverview data={result.data}/>
+    </div>
+  );
+}

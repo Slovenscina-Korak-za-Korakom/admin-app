@@ -80,13 +80,21 @@
   --sidebar-accent-active: oklch(0.92 0.05 280); /* Soft purple background */
   --sidebar-accent-hover: oklch(0.95 0.03 280); /* Lighter purple hover */
   --sidebar-indicator: oklch(0.55 0.22 280); /* Vibrant purple indicator */
-  --sidebar-icon-gradient: linear-gradient(135deg, oklch(0.65 0.2 280), oklch(0.6 0.18 340)); /* Purple to blue gradient */
+  --sidebar-icon-gradient: linear-gradient(
+    135deg,
+    oklch(0.65 0.2 280),
+    oklch(0.6 0.18 340)
+  ); /* Purple to blue gradient */
   --sidebar-icon-bg: oklch(0.94 0.06 280); /* Light purple icon background */
 
   /* Calendar Colors */
   --calendar-today-bg: #ebf5ff;
   --calendar-today-text: rgb(0, 0, 0);
-  --calendar-today-border: #0062ff;
+  --calendar-today-border: linear-gradient(
+    135deg,
+    #8b5cf6,
+    #3b82f6
+  ); /* Purple to blue gradient */
   --calendar-weekend-bg: rgba(0, 0, 0, 0.02);
   --calendar-weekend-bg-hover: rgba(0, 0, 0, 0.02);
   --calendar-hover-border: rgba(0, 0, 0, 0.1);
@@ -141,15 +149,23 @@
   --sidebar-ring: oklch(0.556 0 0);
   /* Sidebar Colorful Accents - Dark Mode */
   --sidebar-accent-active: oklch(0.25 0.08 280); /* Deeper purple background */
-  --sidebar-accent-hover: oklch(0.30 0.06 280); /* Medium purple hover */
-  --sidebar-indicator: oklch(0.70 0.20 280); /* Bright purple indicator */
-  --sidebar-icon-gradient: linear-gradient(135deg, oklch(0.70 0.22 280), oklch(0.65 0.20 340)); /* Purple to blue gradient */
+  --sidebar-accent-hover: oklch(0.3 0.06 280); /* Medium purple hover */
+  --sidebar-indicator: oklch(0.7 0.2 280); /* Bright purple indicator */
+  --sidebar-icon-gradient: linear-gradient(
+    135deg,
+    oklch(0.7 0.22 280),
+    oklch(0.65 0.2 340)
+  ); /* Purple to blue gradient */
   --sidebar-icon-bg: oklch(0.28 0.09 280); /* Purple icon background */
 
   /* Calendar Colors - Dark Mode */
   --calendar-today-bg: #1a2531;
   --calendar-today-text: #ffffff;
-  --calendar-today-border: #60a5fa;
+  --calendar-today-border: linear-gradient(
+    135deg,
+    #a78bfa,
+    #60a5fa
+  ); /* Purple to blue gradient */
   --calendar-weekend-bg: rgba(255, 255, 255, 0.02);
   --calendar-weekend-bg-hover: rgba(255, 255, 255, 0.05);
   --calendar-hover-border: rgba(255, 255, 255, 0.1);

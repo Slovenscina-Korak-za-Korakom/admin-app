@@ -36,8 +36,8 @@ export const SIDEBAR_DATA = {
       icon: IconChalkboard,
     },
     {
-      title: "Courses",
-      url: "/courses",
+      title: "Course Management",
+      url: "/course-management",
       icon: IconVideo,
     },
     {

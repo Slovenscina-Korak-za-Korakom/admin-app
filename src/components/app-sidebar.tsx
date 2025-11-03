@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import { NavMain } from "@/components/nav-main";
+import {NavMain} from "@/components/nav-main";
 import {
   Sidebar,
   SidebarContent,
@@ -12,14 +12,13 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { SIDEBAR_DATA } from "@/lib/docs";
-import { IconUserHexagon } from "@tabler/icons-react";
-import { NavSecondary } from "./nav-secondary";
-import { cn } from "@/lib/utils";
+import {SIDEBAR_DATA} from "@/lib/docs";
+import {IconUserHexagon} from "@tabler/icons-react";
+import {NavSecondary} from "./nav-secondary";
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({...props}: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar collapsible="icon" {...props}>
+    <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader className="border-b border-sidebar-border/50 px-3 py-4">
         <SidebarMenu>
           <SidebarMenuItem>
@@ -27,19 +26,20 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               size="lg"
               className="cursor-default pointer-events-none justify-start gap-3 px-3 h-auto py-2.5 hover:bg-transparent"
             >
-              <div 
+              <div
                 className="flex items-center justify-center size-8 rounded-lg text-white shadow-sm"
                 style={{
                   background: 'var(--sidebar-icon-gradient)'
                 }}
               >
-                <IconUserHexagon className="size-5" />
+                <IconUserHexagon className="size-5"/>
               </div>
               <div className="flex flex-col items-start gap-0.5">
                 <span className="text-xs font-semibold leading-none text-sidebar-foreground/90">
                   ADMIN
                 </span>
-                <span className="text-[10px] font-medium leading-none text-sidebar-foreground/60 truncate max-w-[180px]">
+                <span
+                  className="text-[10px] font-medium leading-none text-sidebar-foreground/60 truncate max-w-[180px]">
                   Slovenščina Korak za Korakom
                 </span>
               </div>
@@ -48,10 +48,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent className="px-2 py-4">
-        <NavMain items={SIDEBAR_DATA.navMain} />
+        <NavMain items={SIDEBAR_DATA.navMain}/>
       </SidebarContent>
       <SidebarFooter className="border-t border-sidebar-border/50 px-2 py-3">
-        <NavSecondary items={SIDEBAR_DATA.navSecondary} />
+        <NavSecondary items={SIDEBAR_DATA.navSecondary}/>
       </SidebarFooter>
     </Sidebar>
   );

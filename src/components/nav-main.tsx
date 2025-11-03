@@ -1,7 +1,7 @@
 "use client";
 
-import { type Icon } from "@tabler/icons-react";
-import { usePathname } from "next/navigation";
+import {type Icon} from "@tabler/icons-react";
+import {usePathname} from "next/navigation";
 
 import {
   SidebarGroup,
@@ -11,11 +11,13 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
+import {cn} from "@/lib/utils";
+import {useEffect, useState} from "react";
+import {isAdmin} from "@/actions/admin-actions";
 
 export function NavMain({
-  items,
-}: {
+                          items,
+                        }: {
   items: {
     title: string;
     url: string;
@@ -23,12 +25,26 @@ export function NavMain({
   }[];
 }) {
   const pathname = usePathname();
+  const [isUserAdmin, setIsUserAdmin] = useState<boolean>(false);
+
+  useEffect(() => {
+    const checkAdmin = async () => {
+      const response = (await isAdmin()) as boolean;
+      setIsUserAdmin(response);
+    };
+    checkAdmin();
+  }, []);
+
+  const filteredItems = items.filter((item) => {
+    // If the URL matches "/team" and the user is not admin, skip this item
+    return !(item.url === "/team" && !isUserAdmin);
+  });
 
   return (
     <SidebarGroup>
       <SidebarGroupContent>
         <SidebarMenu className="space-y-1">
-          {items.map((item) => {
+          {filteredItems.map((item) => {
             const isActive =
               pathname === item.url || pathname.startsWith(item.url + "/");
 
@@ -42,13 +58,13 @@ export function NavMain({
                     "group relative cursor-pointer rounded-lg transition-all duration-200",
                     "hover:bg-[var(--sidebar-accent-hover)]",
                     isActive &&
-                      "bg-[var(--sidebar-accent-active)] text-[var(--sidebar-indicator)] font-medium shadow-sm"
+                    "bg-[var(--sidebar-accent-active)] text-[var(--sidebar-indicator)] font-medium shadow-sm"
                   )}
                   style={
                     isActive
                       ? {
-                          color: "var(--sidebar-indicator)",
-                        }
+                        color: "var(--sidebar-indicator)",
+                      }
                       : {}
                   }
                 >
@@ -76,7 +92,7 @@ export function NavMain({
                     {isActive && (
                       <div
                         className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r-full shadow-sm"
-                        style={{ backgroundColor: "var(--sidebar-indicator)" }}
+                        style={{backgroundColor: "var(--sidebar-indicator)"}}
                       />
                     )}
                   </Link>
