@@ -545,7 +545,7 @@ const ScheduleBuilder = () => {
         firstDay={1} // Monday
         slotMinTime="06:00:00"
         slotMaxTime="24:00:00"
-        slotDuration="00:30:00"
+        slotDuration="00:15:00"
         select={handleDateSelect}
         eventClick={handleEventClick}
         eventDrop={handleEventDrop}
