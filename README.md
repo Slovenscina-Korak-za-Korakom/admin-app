@@ -1,36 +1,67 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Slovene Step by Step - Admin Panel
 
-## Getting Started
+A modern, feature-rich admin dashboard for managing the **Slovenščina Korak za Korakom** (Slovene Step by Step) language
+learning platform. Built for tutors and administrators to efficiently manage tutoring sessions, language club events,
+team scheduling, and student bookings.
 
-First, run the development server:
+## Overview
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+This admin panel serves as the central hub for running a language tutoring business. It streamlines the day-to-day
+operations of managing one-on-one tutoring sessions, group language club events, and team coordination - all from a
+single, intuitive interface.
+
+### Key Features
+
+- **Dashboard Overview** - At-a-glance view of today's events, sessions, pending actions, and recent activity with smart
+  alerts for items requiring attention
+- **Language Club Management** - Create, edit, and manage group language learning events with capacity tracking,
+  pricing, and Stripe payment integration
+- **Session Scheduling** - Manage individual tutoring timeblocks with flexible duration settings and location support (
+  online/in-person)
+- **Team Coordination** - Overview of all tutors, their schedules, and hours breakdown
+- **Personal Schedule** - Each tutor can manage their own availability and view their assigned sessions
+- **Payment Tracking** - Monitor booking payments with status tracking (pending, paid, cancelled, refunded)
+
+## Tech Stack
+
+| Category       | Technology                         |
+|----------------|------------------------------------|
+| Framework      | Next.js 16 (App Router, Turbopack) |
+| Frontend       | React 19, Tailwind CSS 4           |
+| UI Components  | Radix UI, shadcn/ui                |
+| Authentication | Clerk (role-based access)          |
+| Database       | PostgreSQL (Neon) with Drizzle ORM |
+| Calendar       | FullCalendar                       |
+| Forms          | React Hook Form + Zod              |
+| Drag & Drop    | dnd-kit                            |
+
+## Project Structure
+
+```
+src/
+├── app/
+│   ├── (protected)/          # Authenticated routes
+│   │   ├── dashboard/        # Main dashboard
+│   │   ├── language-club/    # Language club events
+│   │   ├── my-schedule/      # Tutor's personal schedule
+│   │   ├── sessions/         # Session management
+│   │   ├── team/             # Team overview
+│   │   └── course-management/# Course management
+│   └── sign-in/              # Authentication
+├── actions/                  # Server actions
+├── components/               # Reusable components
+│   └── ui/                   # UI primitives
+├── db/                       # Database schema & config
+└── lib/                      # Utilities
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Architecture Highlights
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Server Actions** - All data mutations go through type-safe server actions with built-in authentication checks
+- **Role-Based Access** - Admin users are managed via environment configuration with Clerk handling authentication
+- **Tutor Activation Flow** - New tutors must be activated before accessing the system
+- **Timezone Support** - Full timezone handling with `date-fns-tz` for accurate scheduling across regions
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## License
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Private project - All rights reserved.
