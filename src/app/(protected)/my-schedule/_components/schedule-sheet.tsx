@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {Textarea} from "@/components/ui/textarea";
+import {Input} from "@/components/ui/input";
 import {
   IconTrash,
   IconCheck,
@@ -29,6 +30,7 @@ import {
   IconVideo,
   IconBuilding,
   IconInfoCircle,
+  IconMail,
 } from "@tabler/icons-react";
 import {calculateEndTime} from "@/app/(protected)/my-schedule/_components/schedule-confirm-dialog";
 
@@ -93,6 +95,7 @@ interface CalendarEvent {
   location: string;
   description?: string;
   color: string;
+  email?: string;
 }
 
 interface ScheduleSheetProps {
@@ -111,6 +114,7 @@ interface ScheduleSheetProps {
     location: string;
     description: string;
     color: string;
+    email: string;
   };
   onFormDataChange: (data: {
     startTime: string;
@@ -119,6 +123,7 @@ interface ScheduleSheetProps {
     location: string;
     description: string;
     color: string;
+    email: string;
   }) => void;
   onSave: () => void;
   onDelete: () => void;
@@ -161,6 +166,7 @@ export const ScheduleSheet: React.FC<ScheduleSheetProps> = ({
       ...formData,
       sessionType: value,
       color: defaultColor,
+      email: value === "regulars" ? formData.email : "",
     });
   };
 
@@ -271,6 +277,31 @@ export const ScheduleSheet: React.FC<ScheduleSheetProps> = ({
               </p>
             </div>
           </div>
+
+          {/* Student Email (regulars only) */}
+          {formData.sessionType === "regulars" && (
+            <div className="space-y-3">
+              <Label className="text-sm font-semibold flex items-center gap-2">
+                <IconMail className="h-4 w-4"/>
+                Student Email
+                <span className="text-xs font-normal text-destructive">
+                  *
+                </span>
+              </Label>
+              <Input
+                type="email"
+                value={formData.email}
+                onChange={(e) =>
+                  onFormDataChange({...formData, email: e.target.value})
+                }
+                placeholder="student@example.com"
+                className="h-12 text-base"
+              />
+              <p className="text-xs text-muted-foreground">
+                An invitation email will be sent to this address when the schedule is saved.
+              </p>
+            </div>
+          )}
 
           {/* Location */}
           <div className="space-y-3">

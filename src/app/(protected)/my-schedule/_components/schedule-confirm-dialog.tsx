@@ -16,6 +16,7 @@ import {
   IconClock,
   IconVideo,
   IconBuilding,
+  IconMail,
 } from "@tabler/icons-react";
 
 interface TimeSlot {
@@ -26,6 +27,7 @@ interface TimeSlot {
   location: string;
   description?: string;
   color?: string;
+  email?: string;
 }
 
 interface DaySchedule {
@@ -189,6 +191,14 @@ export const ScheduleConfirmDialog: React.FC<ScheduleConfirmDialogProps> = ({
                                 <p className="text-sm text-muted-foreground/80 leading-relaxed pt-1">
                                   {slot.description}
                                 </p>
+                              )}
+                              {slot.email && (
+                                <div className="flex items-center gap-1.5 pt-1">
+                                  <IconMail className="h-3.5 w-3.5 text-muted-foreground/70"/>
+                                  <span className="text-sm text-muted-foreground/80">
+                                    {slot.email}
+                                  </span>
+                                </div>
                               )}
                             </div>
                           </div>

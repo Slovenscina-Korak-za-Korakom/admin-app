@@ -28,6 +28,7 @@ interface TimeSlot {
   location: string;
   description?: string;
   color?: string;
+  email?: string;
 }
 
 interface DaySchedule {
@@ -44,6 +45,7 @@ interface CalendarEvent {
   location: string;
   description?: string;
   color: string;
+  email?: string;
 }
 
 const getDefaultColorForSessionType = (sessionType: string): string => {
@@ -73,6 +75,7 @@ const ScheduleBuilder = () => {
     location: string;
     description: string;
     color: string;
+    email: string;
   }>({
     startTime: "09:00",
     duration: 60,
@@ -80,6 +83,7 @@ const ScheduleBuilder = () => {
     location: "online",
     description: "",
     color: "#3b82f6",
+    email: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -102,6 +106,7 @@ const ScheduleBuilder = () => {
             color:
               timeSlot.color ||
               getDefaultColorForSessionType(timeSlot.sessionType),
+            email: timeSlot.email,
           });
         });
       });
@@ -211,6 +216,7 @@ const ScheduleBuilder = () => {
         location: existingEvent.location,
         description: existingEvent.description || "",
         color: existingEvent.color,
+        email: existingEvent.email || "",
       });
       setSelectedSlot({
         dayOfWeek,
@@ -228,6 +234,7 @@ const ScheduleBuilder = () => {
         location: "online",
         description: "",
         color: defaultColor,
+        email: "",
       });
       setSelectedSlot({
         dayOfWeek,
@@ -256,6 +263,7 @@ const ScheduleBuilder = () => {
         location: event.location,
         description: event.description || "",
         color: event.color,
+        email: event.email || "",
       });
       setSelectedSlot({
         dayOfWeek: event.dayOfWeek,
@@ -340,6 +348,11 @@ const ScheduleBuilder = () => {
       return;
     }
 
+    if (formData.sessionType === "regulars" && !formData.email) {
+      toast.error("Email is required for regulars sessions");
+      return;
+    }
+
     if (editingEvent) {
       // Update existing event
       setEvents((prev) =>
@@ -353,6 +366,7 @@ const ScheduleBuilder = () => {
               location: formData.location,
               description: formData.description,
               color: formData.color,
+              email: formData.sessionType === "regulars" ? formData.email : undefined,
             }
             : e
         )
@@ -369,6 +383,7 @@ const ScheduleBuilder = () => {
         location: formData.location,
         description: formData.description,
         color: formData.color,
+        email: formData.sessionType === "regulars" ? formData.email : undefined,
       };
       setEvents((prev) => [...prev, newEvent]);
       toast.success("Time slot added");
@@ -408,6 +423,7 @@ const ScheduleBuilder = () => {
         location: event.location,
         description: event.description,
         color: event.color,
+        email: event.email,
       };
 
       if (!schedulesMap.has(event.dayOfWeek)) {
@@ -466,9 +482,13 @@ const ScheduleBuilder = () => {
       const startDate = getDateForDayOfWeek(event.dayOfWeek, event.startTime);
       const endDate = new Date(startDate.getTime() + event.duration * 60000);
 
+      const title = event.sessionType === "regulars" && event.email
+        ? `${event.sessionType} (${event.email}) • ${event.location}`
+        : `${event.sessionType} • ${event.location}`;
+
       return {
         id: event.id,
-        title: `${event.sessionType} • ${event.location}`,
+        title,
         start: startDate,
         end: endDate,
         backgroundColor: event.color,

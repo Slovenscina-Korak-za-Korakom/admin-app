@@ -4,13 +4,64 @@ import { notFound } from "next/navigation";
 import { SessionData } from "@/components/calendar/types";
 import { checkTutorActivation } from "@/actions/admin-actions";
 import { ActivationWrapper } from "@/app/(protected)/my-schedule/_components/activation-wrapper";
-import { getScheduleData } from "@/actions/timeblocks";
+import { getScheduleData, getAcceptedRegulars } from "@/actions/timeblocks";
 
 type SearchParams = {
   tab?: string;
   view?: string;
   month?: string;
 };
+
+function generateRecurringEvents(
+  invitations: {
+    id: number;
+    tutorId: number;
+    studentClerkId: string | null;
+    dayOfWeek: number;
+    startTime: string;
+    duration: number;
+    location: string;
+  }[]
+): SessionData[] {
+  const events: SessionData[] = [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Generate events for a rolling 3-month window
+  const endDate = new Date(today);
+  endDate.setMonth(endDate.getMonth() + 3);
+
+  for (const inv of invitations) {
+    // Find the first occurrence on or after today
+    const current = new Date(today);
+    const currentDayOfWeek = current.getDay();
+    let daysUntil = inv.dayOfWeek - currentDayOfWeek;
+    if (daysUntil < 0) daysUntil += 7;
+    current.setDate(current.getDate() + daysUntil);
+
+    const [hours, minutes] = inv.startTime.split(":").map(Number);
+
+    while (current <= endDate) {
+      const startTime = new Date(current);
+      startTime.setHours(hours, minutes, 0, 0);
+
+      events.push({
+        id: -(inv.id * 1000 + events.length), // Negative IDs to avoid collision with real timeblocks
+        tutorId: inv.tutorId,
+        startTime,
+        duration: inv.duration,
+        status: "booked",
+        sessionType: "regulars",
+        location: inv.location,
+        studentId: inv.studentClerkId || "",
+      });
+
+      current.setDate(current.getDate() + 7);
+    }
+  }
+
+  return events;
+}
 
 export default async function TimeblocksPage({
   searchParams,
@@ -26,7 +77,15 @@ export default async function TimeblocksPage({
   const params = await searchParams;
   const isActivated = (await checkTutorActivation(userId)) as boolean;
 
-  const { data } = (await getScheduleData()) as { data: SessionData[] };
+  const [scheduleResult, regularsResult] = await Promise.all([
+    getScheduleData(),
+    getAcceptedRegulars(),
+  ]);
+
+  const timeblocksData = (scheduleResult.data || []) as SessionData[];
+  const acceptedRegulars = regularsResult.data || [];
+  const recurringEvents = generateRecurringEvents(acceptedRegulars);
+  const data = [...timeblocksData, ...recurringEvents];
 
   return (
     <div className="flex flex-col flex-1 min-h-0 p-5 space-y-6 w-full h-full">
