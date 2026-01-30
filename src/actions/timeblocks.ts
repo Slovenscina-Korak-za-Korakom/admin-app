@@ -2,12 +2,14 @@
 "use server";
 
 import db from "@/db";
-import {schedulesTable, timeblocksTable, tutorsTable, regularInvitationsTable} from "@/db/schema";
+import {schedulesTable, timeblocksTable, tutorsTable, regularInvitationsTable, cancelledRegularSessionsTable} from "@/db/schema";
 import {auth, clerkClient} from "@clerk/nextjs/server";
 import {eq, desc, and} from "drizzle-orm";
 import {randomUUID} from "crypto";
 import {resend} from "@/lib/resend";
 import {InvitationEmail} from "@/emails/invitation-email";
+import {SessionCancelledEmail} from "@/emails/session-cancelled-email";
+import {ScheduleRemovedEmail} from "@/emails/schedule-removed-email";
 
 function getBaseUrl(): string {
   if (process.env.NEXT_PUBLIC_APP_URL) {
@@ -283,5 +285,174 @@ export const getAcceptedRegulars = async () => {
   } catch (error) {
     console.error("Error fetching accepted regulars:", error);
     return {data: [], status: 500};
+  }
+};
+
+export const getCancelledSessions = async () => {
+  const {userId} = await auth();
+  if (!userId) {
+    return {data: [], status: 401};
+  }
+
+  try {
+    const cancelled = await db
+      .select({
+        invitationId: cancelledRegularSessionsTable.invitationId,
+        cancelledDate: cancelledRegularSessionsTable.cancelledDate,
+      })
+      .from(cancelledRegularSessionsTable)
+      .innerJoin(
+        regularInvitationsTable,
+        eq(regularInvitationsTable.id, cancelledRegularSessionsTable.invitationId)
+      )
+      .innerJoin(tutorsTable, eq(tutorsTable.id, regularInvitationsTable.tutorId))
+      .where(eq(tutorsTable.clerkId, userId));
+
+    return {data: cancelled, status: 200};
+  } catch (error) {
+    console.error("Error fetching cancelled sessions:", error);
+    return {data: [], status: 500};
+  }
+};
+
+export const cancelRegularSession = async (
+  invitationId: number,
+  cancelledDate: Date,
+  reason?: string
+) => {
+  const {userId} = await auth();
+  if (!userId) {
+    return {message: "Unauthorized", status: 401};
+  }
+
+  try {
+    // Verify the invitation belongs to this tutor
+    const invitation = await db
+      .select({
+        id: regularInvitationsTable.id,
+        studentEmail: regularInvitationsTable.studentEmail,
+        dayOfWeek: regularInvitationsTable.dayOfWeek,
+        startTime: regularInvitationsTable.startTime,
+        tutorName: tutorsTable.name,
+      })
+      .from(regularInvitationsTable)
+      .innerJoin(tutorsTable, eq(tutorsTable.id, regularInvitationsTable.tutorId))
+      .where(
+        and(
+          eq(regularInvitationsTable.id, invitationId),
+          eq(tutorsTable.clerkId, userId)
+        )
+      )
+      .limit(1);
+
+    if (invitation.length === 0) {
+      return {message: "Invitation not found or unauthorized", status: 404};
+    }
+
+    const inv = invitation[0];
+
+    // Insert the cancelled session record
+    await db.insert(cancelledRegularSessionsTable).values({
+      invitationId,
+      cancelledDate,
+      reason: reason || null,
+    });
+
+    // Format the date for the email
+    const formattedDate = cancelledDate.toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+
+    // Send cancellation email to student
+    try {
+      await resend.emails.send({
+        from: "Slovenščina Korak za Korakom <noreply@slovenscinakzk.com>",
+        to: inv.studentEmail,
+        subject: `Session cancelled for ${formattedDate}`,
+        react: SessionCancelledEmail({
+          tutorName: inv.tutorName,
+          dayOfWeek: inv.dayOfWeek,
+          startTime: inv.startTime,
+          cancelledDate: formattedDate,
+          reason: reason,
+        }),
+      });
+    } catch (emailError) {
+      console.error(`Failed to send cancellation email to ${inv.studentEmail}:`, emailError);
+    }
+
+    return {message: "Session cancelled successfully", status: 200};
+  } catch (error) {
+    console.error("Error cancelling session:", error);
+    return {message: "Failed to cancel session", status: 500};
+  }
+};
+
+export const removeRegularSchedule = async (invitationId: number) => {
+  const {userId} = await auth();
+  if (!userId) {
+    return {message: "Unauthorized", status: 401};
+  }
+
+  try {
+    // Verify the invitation belongs to this tutor and get details
+    const invitation = await db
+      .select({
+        id: regularInvitationsTable.id,
+        studentEmail: regularInvitationsTable.studentEmail,
+        dayOfWeek: regularInvitationsTable.dayOfWeek,
+        startTime: regularInvitationsTable.startTime,
+        duration: regularInvitationsTable.duration,
+        tutorName: tutorsTable.name,
+      })
+      .from(regularInvitationsTable)
+      .innerJoin(tutorsTable, eq(tutorsTable.id, regularInvitationsTable.tutorId))
+      .where(
+        and(
+          eq(regularInvitationsTable.id, invitationId),
+          eq(tutorsTable.clerkId, userId)
+        )
+      )
+      .limit(1);
+
+    if (invitation.length === 0) {
+      return {message: "Invitation not found or unauthorized", status: 404};
+    }
+
+    const inv = invitation[0];
+
+    // Update the invitation status to "removed"
+    await db
+      .update(regularInvitationsTable)
+      .set({
+        status: "removed",
+        updatedAt: new Date(),
+      })
+      .where(eq(regularInvitationsTable.id, invitationId));
+
+    // Send schedule removed email to student
+    try {
+      await resend.emails.send({
+        from: "Slovenščina Korak za Korakom <noreply@slovenscinakzk.com>",
+        to: inv.studentEmail,
+        subject: `Your recurring sessions with ${inv.tutorName} have been discontinued`,
+        react: ScheduleRemovedEmail({
+          tutorName: inv.tutorName,
+          dayOfWeek: inv.dayOfWeek,
+          startTime: inv.startTime,
+          duration: inv.duration,
+        }),
+      });
+    } catch (emailError) {
+      console.error(`Failed to send schedule removal email to ${inv.studentEmail}:`, emailError);
+    }
+
+    return {message: "Schedule removed successfully", status: 200};
+  } catch (error) {
+    console.error("Error removing schedule:", error);
+    return {message: "Failed to remove schedule", status: 500};
   }
 };

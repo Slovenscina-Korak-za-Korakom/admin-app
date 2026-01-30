@@ -29,6 +29,7 @@ export interface SessionData {
   location: string;
   studentId: string;
   tutorId: number;
+  invitationId?: number;
 }
 
 export interface StudentInfo {

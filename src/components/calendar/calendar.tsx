@@ -109,6 +109,7 @@ export default function Calendar({data}: { data: SessionData[] }) {
         location: session.location,
         sessionType: session.sessionType,
         duration: session.duration,
+        invitationId: session.invitationId,
       },
     };
   });
@@ -227,6 +228,7 @@ export default function Calendar({data}: { data: SessionData[] }) {
       location: arg.event.extendedProps.location,
       studentId: arg.event.extendedProps.studentId,
       studentInfo: arg.event.extendedProps.studentInfo,
+      invitationId: arg.event.extendedProps.invitationId,
     };
     setSelectedEvent(session);
     setIsEventSheetOpen(true);

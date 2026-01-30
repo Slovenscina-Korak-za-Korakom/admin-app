@@ -8,6 +8,13 @@
       "when": 1769641925933,
       "tag": "0000_premium_doctor_doom",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1769727425575,
+      "tag": "0001_blushing_firelord",
+      "breakpoints": true
     }
   ]
 }

@@ -1,4 +1,6 @@
-import React from "react";
+"use client";
+
+import React, {useState} from "react";
 import {Badge} from "@/components/ui/badge";
 import {Sheet, SheetContent, SheetTitle} from "@/components/ui/sheet";
 import {
@@ -8,11 +10,24 @@ import {
   IconMapPin,
   IconPhone,
   IconX,
+  IconTrash,
 } from "@tabler/icons-react";
 import {Separator} from "../ui/separator";
 import {Avatar, AvatarFallback, AvatarImage} from "../ui/avatar";
 import {Button} from "../ui/button";
 import {SessionData, StudentInfo} from "@/components/calendar/types";
+import {CancelSessionDialog} from "./cancel-session-dialog";
+import {RemoveScheduleDialog} from "./remove-schedule-dialog";
+
+const DAYS_OF_WEEK = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
 
 type EventSheetProps = {
   isEventSheetOpen: boolean;
@@ -38,7 +53,12 @@ const formatDate = (date: Date) => {
 };
 
 export const EventSheet = ({isEventSheetOpen, setIsEventSheetOpen, selectedSession: event}: EventSheetProps) => {
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
   const student = event?.studentInfo;
+
+  const isRegularsSession = event?.sessionType === "regulars";
+  const isFutureSession = event ? new Date(event.startTime) > new Date() : false;
 
   if (!event) {
     return (
@@ -192,17 +212,61 @@ export const EventSheet = ({isEventSheetOpen, setIsEventSheetOpen, selectedSessi
             {/* Action Buttons */}
             <div className="p-6">
               <div className="flex gap-3">
-                {event.status === "booked" ? (
+                {isRegularsSession && isFutureSession && event.invitationId ? (
                   <>
-                    <Button variant="destructive" size="sm" className="flex-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => setCancelDialogOpen(true)}
+                    >
                       <IconX className="h-4 w-4 mr-2"/>
-                      Cancel
+                      Cancel This Session
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => setRemoveDialogOpen(true)}
+                    >
+                      <IconTrash className="h-4 w-4 mr-2"/>
+                      Remove Schedule
                     </Button>
                   </>
+                ) : event.status === "booked" && isFutureSession ? (
+                  <Button variant="destructive" size="sm" className="flex-1">
+                    <IconX className="h-4 w-4 mr-2"/>
+                    Cancel
+                  </Button>
                 ) : null}
               </div>
             </div>
           </div>
+        )}
+
+        {/* Dialogs for regulars sessions */}
+        {event && isRegularsSession && event.invitationId && (
+          <>
+            <CancelSessionDialog
+              open={cancelDialogOpen}
+              onOpenChange={setCancelDialogOpen}
+              invitationId={event.invitationId}
+              sessionDate={new Date(event.startTime)}
+              studentName={student?.name || null}
+            />
+            <RemoveScheduleDialog
+              open={removeDialogOpen}
+              onOpenChange={setRemoveDialogOpen}
+              invitationId={event.invitationId}
+              studentName={student?.name || null}
+              dayOfWeek={DAYS_OF_WEEK[new Date(event.startTime).getDay()]}
+              startTime={new Date(event.startTime).toLocaleTimeString("default", {
+                hour: "numeric",
+                minute: "2-digit",
+                hour12: true,
+              })}
+            />
+          </>
         )}
       </SheetContent>
     </Sheet>
